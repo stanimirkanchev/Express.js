@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Index</title>
+  <style>
+    * {
+      font-family: Helvetica, Arial, sans-serif;
+    }
+
+    div {
+      display: flex;
+      align-items: center;
+      padding: 1em;
+      font-size: 1.2em;
+    }
+
+    div a {
+      padding-left: 0.5em;
+    }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <a href="/">Back to Users List</a>
+  </div>
+
+  <div class="pic">
+    <img src="/profilepics/{{user.username}}_med.jpg">
+    <p>
+      <a href="{{user.username}}/edit" onclick="edit()">Edit</a>
+      <a href="#" onclick="edit()">Edit</a>
+    </p>
+  </div>
+
+  <h1>{{user.name.full}}</h1>
+  <dl>
+    <dt>Name</dt>
+    <dd class="view">{{user.name.full}}</dd>
+    <dd class="edit"><input id="name" typre="text" value="{{user.name.full}}"></dd>
+    <dt>Street</dt>
+    <dd class="view">{{adress.street}}</dd>
+    <dd class="edit"><input id="street" typre="text" value="{{address.street}}"></dd>
+    <dt>City</dt>
+    <dd class="view">{{adress.city}}</dd>
+    <dd class="edit"><input id="city" typre="text" value="{{address.city}}"></dd>
+    <dt>State</dt>
+    <dd class="view">{{adress.state}}</dd>
+    <dd class="edit"><input id="state" typre="text" value="{{address.statet}}"></dd>
+    <dt>Zip</dt>
+    <dd class="view">{{adress.zip}}</dd>
+    <dd class="edit"><input id="zip" typre="text" value="{{address.zip}}"></dd>
+  </br>
+  <dt></dt>
+  <dd class="edit">
+    <input type="submit" value="Save" onclick="save()">
+    <input type="submit" value="Cancel" onclick="cancel()">
+  </dd>
+  </dl>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script>
+function edit(){
+  $('.view').show()
+  $('.edit').hide()
+}
+function cancel(){
+  $('.view').show()
+  $('.edit').hide()
+}
+function save(){
+  $.ajax('/{{user.username}}',{
+    method: 'PUT',
+    data: {
+      name: &('#name').val(),
+      location:{
+        street: &('#street').val(),
+        city: &('#city').val(),
+        state: &('#state').val(),
+        zip: &('#zip').val()
+      }
+    },
+    complate: function(){
+      cancel()
+      location.reload()
+    }
+  })
+}
+function del(){
+  &.ajax('/{{user:username}}',{
+    method: 'DELETE',
+    complete: function(){
+      location = '/'
+    }
+  })
+}
+</script>
+
+</body>
+</html>

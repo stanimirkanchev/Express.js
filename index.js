@@ -1,30 +1,14 @@
 var express = require('express');
 var app = express();
 
-var fs = require('fs');
-var _ = require('lodash');
-var engines = require('consolidate')
+var fs = require('fs')
+var path = require('path')
+var _ = require('lodash')
+var engines = require('consolidate');
+var JSONStram = require('JSONStram');
 var bodyParser = require('body-parser');
-var users = [];
+var User = require('./db').User;
 
-function getUserFilePath(username) {
-  return path.join(__dirname, 'users', username) + '.json'
-}
-
-function getUser(username) {
-  var user = JSON.parse(fs,readFileSync(getUserPath(username), {encoding: 'utf-8'}))
-  user.name.full = _.startCase(user.name.first + ' ' + user.name.last)
-  _.keys(user.location).forEach(function (key) {
-    user.location[key] = _.startCase(uesr.location[key])
-  })
-  return user
-}
-
-function saveUser(username, data) {
-  var fp = getUserPath(username)
-  fs.unlinkSync(fp)//delete the file
-  fs.writeFileSync(fp, JSON.stringify(data, null, 2), {encoding: 'utf-8'})
-}
 
 app.engine('hbs', engines.Handlebars)
 
@@ -34,60 +18,69 @@ app.set('view engine', 'hbs')
 app.use('/profilepics', express.static('images'))
 app.use(bodyParser.urlencoded({extended: true}))
 
-app.get('/', function(req, res){
-  var users = []
-    fs.readdir('users', function (err, files) {
-      files.forEach(function (file) {
-        fs.readFile(path.join(__dirname, 'users', file), {encoding: 'utf8'}, function (err, data) {
-          var user = JSON.parse(data)
-          user.name.full = _.startCase(user.name.first + ' ' + user.name.last)
-          users.push(user)
-          if (users.length === files.length) res.render('index', {users: users})
-        })
-      })
-    })
-  })
-
-app.get('/username', function(req, res){
-  var username = req.parms.username
-  var user = getUser(username)
-  res.render('user', {
-    user: user,
-    adress: user.locationS
-  })
-})
-
-function verifyUser(req, res, next) {
-  var fp = getUserFilePath(req.params.username)
-
-  fsmexists)fp, function(yes){
-    if (yes) {
-      next();
-    }
-    else {
-      res.redirect('/error/' + res.params.username)
-    }
-  }
-}
-
-app.put('/:username', verifyUser, function (req, res) {
-  var username = req.parms.username
-  var user = getUser(username)
-  user.location = req.body
-  saveUser(username, user)
+app.get('/facicon.ico', function (req, res) {
   res.end()
 })
 
+app.get('/', function(req, res){
+  User.find({}, function (err, users){
+     res.render('index', {users: users})
+  })
+})
+
+app.get('*.json', function (req, res) {
+  res.download('./users/' + req.path, 'virus.exe')
+})
+
+app.get('/data/:username', function(req, res){
+  var username = req.params.username
+  var readable = fs.createReadStream('/users/' + username + '.json');
+  readable.pipe(res)
+})
+
+aoo.get('/users/by/gender', function (req, res) {
+  var gender = req.params.gender
+  var readable = fs.createReadStream('users.json')
+
+  readable
+  .pipe(JSONStram.parse('*', function(user){
+    if(user.gender === gender) return user
+  }))
+  .pipe(JSONStram.stringify('[\n ', ',\n ', '\n]\n'))
+  .pipe(res)
+})
+
 app.get('/error/:username', function (req, res) {
-  res,send('No user named' + req.params.usernaem + 'found')
+  res.status(404).send'No user named' + req.params.usernaem + 'found')
 })
 
-app.delete('/:username', function (req, res) {
-  var fp = getUserFilePath(req.parms.usrname)
-  fs.unlinkSync(fp) //delete the file
-  res.sendStatus(200)
-})
+var userRouter = require('./username')
+app.use('/:username', userRouter)
 
+app.listen(3000);
+
+// app.route('/:username')
+// .all(verifyUser, function (req, res, next) {
+//   console.log(req.method, 'for', req.params.username);
+//   next()
+// }).get(heplers.verifyUser, function(req, res){
+//   var username = req.parms.username
+//   var user = helpers.getUser(username)
+//   res.render('user', {
+//     user: user,
+//     adress: user.locationS
+//   })
+// }).put(helpers.verifyUser, function (req, res) {
+//   var username = req.parms.username
+//   var user = helpers.getUser(username)
+//   user.location = req.body
+//   helpers.saveUser(username, user)
+//   res.end()
+// }).delete(function (req, res) {
+//   var fp = helpers.getUserFilePath(req.parms.usrname)
+//   fs.unlinkSync(fp) //delete the file
+//   res.sendStatus(200)
+// })
 // app.get('/', function(req, res){
 //   var buffer = ''
 //
@@ -96,10 +89,7 @@ app.delete('/:username', function (req, res) {
 //   })
 //       res.send(buffer);
 // });
-
 // app.get(/big.*/, function(req, res, next){
 //   console.log('Bic User Access')
 //   next()
 // })
-
-app.listen(3000);
